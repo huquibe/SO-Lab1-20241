@@ -6,6 +6,9 @@
 #include <unistd.h>
 
 #define MAX_LINE_LENGTH 256 // Adjust as needed for your expected line lengths
+#define bool int
+#define true 1
+#define false 0
 
 int areFilesHardlinked(const char *file1, const char *file2)
 {
@@ -16,39 +19,59 @@ int areFilesHardlinked(const char *file1, const char *file2)
     return (stat1.st_dev == stat2.st_dev && stat1.st_ino == stat2.st_ino);
 }
 
-int read_and_print_lines(const char *filename)
+int read_and_write_lines(const char *input_filename, const char *output_filename)
 {
-    FILE *input_file = fopen(filename, "r");
+    FILE *input_file = fopen(input_filename, "r");
     if (input_file == NULL)
     {
-        fprintf(stderr, "reverse: cannot open file '%s'\n", filename);
-        exit(1);
+        fprintf(stderr, "Error: Could not open input file '%s'\n", input_filename);
+        return 1; // Indicate error
+    }
+
+    FILE *output_file = fopen(output_filename, "w");
+    if (output_file == NULL)
+    {
+        fprintf(stderr, "Error: Could not open output file '%s'\n", output_filename);
+        fclose(input_file); // Close input file if output fails
+        return 1;           // Indicate error
     }
 
     char line[MAX_LINE_LENGTH];
     size_t bytes_read;
+    bool first_line = true; // Flag to track the first line for avoiding extra newline
 
     while ((bytes_read = fread(line, sizeof(char), MAX_LINE_LENGTH - 1, input_file)) > 0)
     {
         // Ensure proper null termination
         line[bytes_read] = '\0';
 
-        // Print the line, removing any trailing newline if present
-        if (line[bytes_read - 1] == '\n')
+        // Write the line to the output file, handling potential errors
+        if (fwrite(line, sizeof(char), bytes_read + 1, output_file) != bytes_read + 1)
         {
-            line[bytes_read - 1] = '\0'; // Overwrite newline
+            fprintf(stderr, "Error: Error writing to output file.\n");
+            fclose(input_file);
+            fclose(output_file);
+            return 1; // Indicate error
         }
-        printf("%s\n", line);
+
+        // Avoid adding a newline after the first line
+        if (!first_line)
+        {
+            fputc('\n', output_file); // Add newline only after first line
+        }
+        first_line = false;
     }
 
     if (ferror(input_file))
     {
-        fprintf(stderr, "Error: An error occurred while reading the file.\n");
+        fprintf(stderr, "Error: An error occurred while reading the input file.\n");
         fclose(input_file);
+        fclose(output_file);
         return 1; // Indicate error
     }
 
     fclose(input_file);
+    fclose(output_file);
     return 0; // Success
 }
 
@@ -86,11 +109,10 @@ int main(int argc, char *argv[])
         exit(1);
     }
 
-    return read_and_print_lines(argv[1]);
+    return read_and_write_lines(argv[1], argv[2]);
 
     fclose(input_file);
     fclose(output_file);
 
-    
     return 0;
 }
