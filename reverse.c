@@ -5,6 +5,8 @@
 #include <sys/stat.h>
 #include <unistd.h>
 
+#define MAX_LINE_LENGTH 256 // Adjust as needed for your expected line lengths
+
 int areFilesHardlinked(const char *file1, const char *file2)
 {
     struct stat stat1, stat2;
@@ -12,6 +14,42 @@ int areFilesHardlinked(const char *file1, const char *file2)
         return -1; // Error occurred
 
     return (stat1.st_dev == stat2.st_dev && stat1.st_ino == stat2.st_ino);
+}
+
+int read_and_print_lines(const char *filename)
+{
+    FILE *input_file = fopen(filename, "r");
+    if (input_file == NULL)
+    {
+        fprintf(stderr, "reverse: cannot open file '%s'\n", filename);
+        exit(1);
+    }
+
+    char line[MAX_LINE_LENGTH];
+    size_t bytes_read;
+
+    while ((bytes_read = fread(line, sizeof(char), MAX_LINE_LENGTH - 1, input_file)) > 0)
+    {
+        // Ensure proper null termination
+        line[bytes_read] = '\0';
+
+        // Print the line, removing any trailing newline if present
+        if (line[bytes_read - 1] == '\n')
+        {
+            line[bytes_read - 1] = '\0'; // Overwrite newline
+        }
+        printf("%s\n", line);
+    }
+
+    if (ferror(input_file))
+    {
+        fprintf(stderr, "Error: An error occurred while reading the file.\n");
+        fclose(input_file);
+        return 1; // Indicate error
+    }
+
+    fclose(input_file);
+    return 0; // Success
 }
 
 int main(int argc, char *argv[])
@@ -48,9 +86,11 @@ int main(int argc, char *argv[])
         exit(1);
     }
 
+    return read_and_print_lines(argv[1]);
+
     fclose(input_file);
     fclose(output_file);
 
-    // Funcionalidad para reverse
+    
     return 0;
 }
