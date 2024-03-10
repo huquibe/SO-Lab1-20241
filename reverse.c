@@ -24,16 +24,28 @@ int read_and_write_lines(const char *input_filename, const char *output_filename
     FILE *input_file = fopen(input_filename, "r");
     if (input_file == NULL)
     {
-        fprintf(stderr, "Error: Could not open input file '%s'\n", input_filename);
-        return 1; // Indicate error
+        fprintf(stderr, "reverse: cannot open file '%s'\n", input_filename);
+        exit(1);
     }
 
     FILE *output_file = fopen(output_filename, "w");
     if (output_file == NULL)
     {
-        fprintf(stderr, "Error: Could not open output file '%s'\n", output_filename);
-        fclose(input_file); // Close input file if output fails
-        return 1;           // Indicate error
+        fprintf(stderr, "reverse: cannot open file '%s'\n", output_filename);
+        fclose(input_file);
+        exit(1);
+    }
+
+    if (strcmp(input_filename, output_filename) == 0)
+    {
+        fprintf(stderr, "reverse: input and output file must differ\n");
+        exit(1);
+    }
+
+    if (areFilesHardlinked(input_filename, output_filename))
+    {
+        fprintf(stderr, "reverse: input and output file must differ\n");
+        exit(1);
     }
 
     char line[MAX_LINE_LENGTH];
@@ -83,36 +95,7 @@ int main(int argc, char *argv[])
         exit(1);
     }
 
-    FILE *input_file = fopen(argv[1], "r");
-    if (input_file == NULL)
-    {
-        fprintf(stderr, "reverse: cannot open file '%s'\n", argv[1]);
-        exit(1);
-    }
-
-    FILE *output_file = fopen(argv[2], "r");
-    if (output_file == NULL)
-    {
-        fprintf(stderr, "reverse: cannot open output file '%s'\n", argv[2]);
-        exit(1);
-    }
-
-    if (strcmp(argv[1], argv[2]) == 0)
-    {
-        fprintf(stderr, "reverse: input and output file must differ\n");
-        exit(1);
-    }
-
-    if (areFilesHardlinked(argv[1], argv[2]))
-    {
-        fprintf(stderr, "reverse: input and output file must differ\n");
-        exit(1);
-    }
-
     return read_and_write_lines(argv[1], argv[2]);
-
-    fclose(input_file);
-    fclose(output_file);
 
     return 0;
 }
