@@ -46,7 +46,7 @@ int main(int argc, char *argv[])
 {
     if (argc != 2)
     {
-        fprintf(stderr, "Uso: %s <archivo_de_entrada>\n", argv[0]);
+        fprintf(stderr, "Uso: %s <<input> <output>>\n", argv[0]);
         return 1;
     }
 
