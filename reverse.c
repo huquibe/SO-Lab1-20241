@@ -12,13 +12,13 @@ struct Node
 // Función para crear un nuevo nodo
 struct Node *createNode(char *line)
 {
-    struct Node *newNode = malloc(sizeof(struct Node));
+    struct Node *newNode = (struct Node *)malloc(sizeof(struct Node));
     if (newNode == NULL)
     {
-        perror("Error al asignar memoria para un nuevo nodo");
+        perror("Error al asignar memoria para un nuevo nodo\n");
         exit(1);
     }
-    newNode->line = strdup(line);
+    newNode->line = strdup(line); // Duplica la línea y guarda el puntero.
     newNode->next = NULL;
     return newNode;
 }
